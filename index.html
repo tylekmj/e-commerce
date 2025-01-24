@@ -41,20 +41,29 @@
     </nav>
 
     <div class="container mt-5">
+    <form action="checkout.html" method="get">
       <h2>Cart</h2>
       <div id="cart-list">
         <!-- Cart items will be dynamically inserted here -->
-      </div>
-      <button class="btn btn-primary" id="checkout-button">Checkout</button>
-    </div>
 
+      </div>
+
+      <a href="checkout.html">
+        <button class="btn btn-primary" id="checkout-button" type="submit">Checkout</button>
+      </form>
+      </a>
+    </div>
+  
     <div class="container mt-5">
+
       <h1>Products</h1>
       <div class="row" id="product-list">
         <!-- Products will be dynamically inserted here -->
         
       </div>
     </div>
+
+    
 
     <footer class="bg-light text-center py-3">
       <p>&copy; 2025 E-commerce Website. All rights reserved.</p>
@@ -65,84 +74,133 @@
       crossorigin="anonymous"
     ></script>
     <script>
+      let cart = [];
+      let productsData = [];
+ 
+      //Adds every product from products.json to the product div
+      function addToCart(event) {
+        const productId = event.target.getAttribute(`data-id`);
+        const product = productsData[productId - 1];
+
+        const existingItem = cart.find(item => item.id == productId);
+        if (existingItem) {
+          existingItem.quantity++;
+        } else {
+          let cartItem = {
+            name: product.name,
+            price: product.price,
+            id: product.id,
+            quantity: 1
+          };
+          cart.push(cartItem);
+        }
+        renderCart();
+      }
+
+      function renderCart() {
+        const cartList = document.getElementById(`cart-list`);
+        let cartItem = ``;
+        
+        //dynamically adds to the cart div as the items are picked
+        cart.forEach((product) => {
+          cartItem += `
+            <div class="cart-item">
+              <h5>${product.name}</h5>
+              <p>$${product.price.toFixed(2)} x <span class="quantity">${product.quantity}</span></p>
+              <input type="hidden" name="id" value="${product.id}" />
+              <input type="hidden" name="name" value="${product.name}" />
+              <input type="hidden" name="price" value="${product.price}" />
+              <input type="hidden" name="quantity" value="${product.quantity}" />
+
+              <button type="button" class="btn btn-secondary increase-quantity" data-id="${product.id}">
+                +
+              </button>
+              <button type="button" class="btn btn-secondary decrease-quantity" data-id="${product.id}">
+                -
+              </button>
+              <button type="button" class="btn btn-danger remove-from-cart" data-id="${product.id}">
+                Remove
+              </button>
+            </div>      
+          `;
+        });
+
+        cartList.innerHTML = cartItem;
+
+        // Click events to start a function whenever the +, -, or remove buttons are clicked
+        document.querySelectorAll('.increase-quantity').forEach(button => {
+          button.addEventListener('click', increaseQuantity);
+        });
+
+        document.querySelectorAll('.decrease-quantity').forEach(button => {
+          button.addEventListener('click', decreaseQuantity);
+        });
+
+        document.querySelectorAll('.remove-from-cart').forEach(button => {
+          button.addEventListener('click', removeFromCart);
+        });
+      }
+
+      
+
+      function increaseQuantity(event) {
+        const productId = event.target.getAttribute('data-id');
+        const product = cart.find(item => item.id == productId);
+        if (product) {
+          product.quantity++;
+          renderCart();
+        }
+      }
+
+      function decreaseQuantity(event) {
+        const productId = event.target.getAttribute('data-id');
+        const product = cart.find(item => item.id == productId);
+        if (product && product.quantity > 1) {
+          product.quantity--;
+          renderCart();
+        }
+      }
+
+      function removeFromCart(event) {
+        event.preventDefault(); //Prevents the remove button from somehow taking you to the checkout page
+        const productId = event.target.getAttribute(`data-id`);
+        cart = cart.filter(product => product.id != productId);
+        console.log("working");
+        renderCart();
+      }
+
       document.addEventListener("DOMContentLoaded", function () {
         const productList = document.querySelector('#product-list');
         let productHTML = '';
-        let productsData = [];
-          
+
         fetch('products.json')
           .then(response => response.json())
           .then(data => {
             console.log(data);
-            productsData = data.products
+            productsData = data.products;
             data.products.forEach(product => {
               productHTML += `
-              <div class="col-md-4">
-                <div class="card mb-4">
-                  <img src="${product.image || 'https://placehold.co/100'}" class="card-img-top" alt="${product.name}">
-                  <div class="card-body">
-                    <h5 class="card-title">${product.name}</h5>
-                    <p class="card-text">$${product.price.toFixed(2)}</p>
-                    <p class="card-text">${product.description}</p>
-                    <button class="btn btn-primary add-to-cart" data-id="${product.id}">Add to Cart</button>
+                <div class="col-md-4">
+                  <div class="card mb-4">
+                    <img src="${product.image || 'https://placehold.co/100'}" class="card-img-top" alt="${product.name}">
+                    <div class="card-body">
+                      <h5 class="card-title">${product.name}</h5>
+                      <p class="card-text">$${product.price.toFixed(2)}</p>
+                      <p class="card-text">${product.description}</p>
+                      <button class="btn btn-primary add-to-cart" data-id="${product.id}">Add to Cart</button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            `;
+              `;
             });
 
             // Insert the generated HTML into the product list container
             productList.innerHTML = productHTML;
             document.querySelectorAll(`.add-to-cart`).forEach((button) => {
-              button.addEventListener("click", addToCart)
-            })
-
-
-            let cart = []
-            function addToCart(event) {
-              const productId = event.target.getAttribute(`data-id`)
-              const product = productsData[productId - 1]
-
-              let cartItem = {
-                name: product.name,
-                price: product.price,
-                id: product.id,
-              }
-              cart.push(cartItem)
-              console.log(cart)
-              renderCart()
-            }
-
-            function renderCart() {
-              const cartList = document.getElementById(`cart-list`)
-              let cartItem = ``
-              cart.forEach((product) => {
-                cartItem += `
-                  <div class="cart-item">
-                  <h5>${product.name}</h5>
-                  <p>${product.price} x 2</p>
-                  <button class="btn btn-danger remove-from-cart" data-id="${product.id}">
-                    remove
-                  </button>
-                `
-              })
-              cartList.innerHTML = cartItem;
-              document.querySelectorAll(`.remove-from-cart`).forEach((button) => {
-                button.addEventListener(`click`, removeFromCart)
-              })
-            }
-
-            function removeFromCart(event) {
-              const productId = event.target.getAttribute(`data-id`)
-              const productIndex = cart.findIndex(
-                (product) => product.id == productId,
-              )
-              cart.splice(productIndex, 1)
-              renderCart()
-            }
-          })
-
-    });
+              button.addEventListener("click", addToCart);
+            });
+          });
+      });
     </script>
   </body>
 </html>

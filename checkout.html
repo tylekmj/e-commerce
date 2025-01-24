@@ -40,12 +40,34 @@
     </div>
   </nav>
 
+
+  <form id="checkout-form"  method="get">
     <div class="container mt-5">
       <h1>Checkout</h1>
-      <div id="cart-summary">
+      <div id="cart-summary" >
         <!-- Cart summary will be dynamically inserted here -->
+        
+        
       </div>
-      <form id="checkout-form">
+
+      <div id="cart-total" >
+        <!-- Cart totals will be dynamically inserted here -->
+        
+        
+      </div>
+
+      <!-- putting these in so they can be grabbed by the get method-->
+      <input type="hidden" id="hidden-email" name="email" value="">
+      <input type="hidden" id="hidden-city" name="city" value="">
+      <input type="hidden" id="hidden-state" name="state" value="">
+      <input type="hidden" id="hidden-zip" name="zip" value="">
+      <input type="hidden" id="hidden-address" name="address" value="">
+      <input type="hidden" id="hidden-apartment" name="apartment" value="">
+
+      
+      
+
+      
         <h2>Login</h2>
         <div class="form-group">
           <label for="email"
@@ -170,14 +192,127 @@
           />
         </div>
         <div id="error-message" class="text-danger"></div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-      </form>
-    </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
+
+ 
+          <button type="submit" class="btn btn-primary">Submit</button>
+
         
-      });
-    </script>
+        
+        
+      </form>
+
+      <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const cartSummary = document.getElementById('cart-summary');
+            const cartTotal = document.getElementById('cart-total');
+        
+            //taking everything from the url and turning them to seperate variables
+            const ids = urlParams.getAll('id');
+            const names = urlParams.getAll('name');
+            const prices = urlParams.getAll('price');
+            const quantity = urlParams.getAll('quantity');
+            
+            let subtotal = 0
+            let truePrice = 0
+        
+            let cartItem = '';
+            let cartPrice = '';
+            for (let i = 0; i < ids.length; i++) {
+                cartItem += `
+                    <div class="cart-item">
+                        <h4>${names[i]}</h4>
+                        <p>$${parseFloat(prices[i]).toFixed(2)} x ${quantity[i]}</p>
+                        <input type="hidden" name="id" value="${ids[i]}" />
+                        <input type="hidden" name="name" value="${names[i]}" />
+                        <input type="hidden" name="price" value="${prices[i]}" />
+                        <input type="hidden" name="quantity" value="${quantity[i]}" />
+                    </div>
+                `;
+        
+                subtotal += Number(parseFloat(prices[i]).toFixed(2) * quantity[i])
+        
+            }
+            
+            let tax = subtotal * 0.15
+            let total = subtotal + tax
+            cartPrice += `
+                    <div class="cart-price">
+                        
+                        <p>Subtotal: $${parseFloat(subtotal).toFixed(2)}</p>
+                        <p>Tax (15%): $${parseFloat(tax).toFixed(2)}</p>
+                        <p>Total: $${parseFloat(total).toFixed(2)}</p>
+                        <input type="hidden" name="total" value="${parseFloat(total).toFixed(2)}">
+ 
+                    </div>
+                `;
+            
+            cartSummary.innerHTML = cartItem;
+            cartTotal.innerHTML = cartPrice;
+        
+        
+        
+            const form = document.querySelector("#checkout-form");
+            form.addEventListener("submit", submitCart);
+            
+            let emailForm = document.getElementById("email")
+            let cityInput = document.getElementById("city")
+            let zip = document.getElementById("zip")
+            let state = document.getElementById("state")
+            let adress = document.getElementById("address")
+            let apt = document.getElementById("apartment")
+                
+            
+
+            function submitCart(event) {
+              event.preventDefault();
+              console.log("submitted");
+
+
+              let emailForm = document.getElementById("email");
+              let cityInput = document.getElementById("city");
+              let zip = document.getElementById("zip");
+              let state = document.getElementById("state");
+              let adress = document.getElementById("address");
+              let apt = document.getElementById("apartment")
+              console.log(apt.value)
+   
+              document.querySelector('input[name="email"]').value = emailForm.value;
+              document.querySelector('input[name="city"]').value = cityInput.value;
+              document.querySelector('input[name="address"]').value = adress.value;
+              document.querySelector('input[name="zip"]').value = zip.value;
+              document.querySelector('input[name="state"]').value = state.value;
+              document.querySelector('input[name="apartment"]').value = apt.value;
+
+              fetch("users.json")
+                  .then(response => response.json())
+                  .then(data => {
+                      const email = emailForm.value;
+                      const pass = document.getElementById("password").value;
+                      console.log(pass);
+                      
+                      const exists = data.some(user => user.email === email); //compares the email the user put in with any of the emails inside of users.json
+                      const existsP = data.some(user => String(user.password) === pass); //Same thing here but with passwords
+                    
+                      console.log(exists);
+                      console.log(existsP);
+
+                      if (exists && existsP) {
+                          form.submit();
+                          const formData = new URLSearchParams(new FormData(form)).toString();
+                          window.location.href = `confirmation.html?${formData}`; 
+                      } else {
+                          const errorMessage = document.getElementById("error-message");
+                          errorMessage.innerHTML = "User does not exist";
+                      }
+                  });
+                 }
+                });
+                
+              </script>
+    </form>
+    </div>
   </body>
 </html>

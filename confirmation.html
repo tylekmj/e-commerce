@@ -45,16 +45,58 @@
       <div id="order-summary">
         <!-- Order summary will be dynamically inserted here -->
       </div>
+      <br>
       <p>
         Thank you for your business! Your order will be shipped within 3-5
         business days.
       </p>
     </div>
 
+
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-       
-      });
+      document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderSummary = document.getElementById('order-summary');
+            
+        
+            const ids = urlParams.getAll('id');
+            const names = urlParams.getAll('name');
+            const prices = urlParams.getAll('price');
+            const quantity = urlParams.getAll('quantity');
+            const total = urlParams.getAll('total');
+            const email = urlParams.getAll('email');
+            const city = urlParams.getAll('city');
+            const state = urlParams.getAll('state');
+            const zip = urlParams.getAll('zip');
+            const address = urlParams.getAll('address');
+            const apt = urlParams.getAll('apartment');
+            
+            let confirmItems = '';
+
+            for (let i = 0; i < ids.length; i++) {
+              confirmItems += `
+                    <div class="cart-item">
+                        <h4>${names[i]}</h4>
+                        <p>$${parseFloat(prices[i]).toFixed(2)} x ${quantity[i]}</p>
+                    </div>
+                `;
+        
+            }
+        
+            confirmItems += `
+                    <div class="cart-item">
+                        
+                        <p>Total: $${parseFloat(total).toFixed(2)}</p>
+                        <h4>Shipping Address</h4>
+                        <p>${address}${apt}, ${city}, ${state}, ${zip}</p>
+                        <h4>Email</h4>
+                        ${email}
+                    </div>
+                `;
+            
+            orderSummary.innerHTML = confirmItems;
+            })
+          
     </script>
   </body>
 </html>
